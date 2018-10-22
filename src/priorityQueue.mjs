@@ -72,6 +72,7 @@ export default class PriorityQueue {
         }
         let n = this.size;
         this.size++;
+        // TODO : that only work in a min priority queue!
         this.array[n] = [key, Number.POSITIVE_INFINITY];
         this.indexMap[key] = n;
         this.update(key, priority);

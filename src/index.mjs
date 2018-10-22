@@ -1,25 +1,11 @@
-import PriorityQueue from "./priorityQueue";
+import Graph from "./graph";
+import {shortestDistance} from "./dijkstra";
 
-const queue = new PriorityQueue();
-console.log(queue);
-console.log("> offer 3");
-queue.offer(3, 9);
-console.log(queue);
-console.log("> offer 4");
-queue.offer(4, 12);
-console.log(queue);
-console.log("> offer 1");
-queue.offer(1, 3);
-console.log(queue);
-console.log("> offer 2");
-queue.offer(2, 50);
-console.log(queue);
-console.log("> update 2 -> 6");
-queue.update(2, 6);
-console.log(queue);
+const g = new Graph();
+g.addNodes(5);
+g.addEdge(1, 2, 5);
+g.addEdge(2, 3, 6);
+g.addEdge(3, 4, 2);
+g.addEdge(1, 3, 15);
 
-while (!queue.empty()) {
-    console.log("> extract");
-    console.log(queue.extract());
-    console.log(queue);
-}
+console.log(shortestDistance(g, 1, 4));
