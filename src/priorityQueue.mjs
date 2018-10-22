@@ -1,8 +1,12 @@
+const DEFAULT_COMPARATOR = (a, b) => a - b;
+
 export default class PriorityQueue {
 
-    constructor() {
+    constructor(comparator = DEFAULT_COMPARATOR) {
+        this.comparator = comparator;
         this.array = [];
         this.size = 0;
+        this.indexMap = {};
     }
 
     empty() {
@@ -26,6 +30,7 @@ export default class PriorityQueue {
             throw new Error("Queue underflow");
         }
         const ret = this.array[0][0];
+        delete this.indexMap[ret];
         this.size--;
         this.swap(0, this.size);
         this.heapify(0);
@@ -50,24 +55,40 @@ export default class PriorityQueue {
     compare(i1, i2) {
         const p1 = this.array[i1][1];
         const p2 = this.array[i2][1];
-        return p1 - p2;
+        return this.comparator(p1, p2);
     }
 
     swap(i1, i2) {
         const tmp = this.array[i1];
         this.array[i1] = this.array[i2];
         this.array[i2] = tmp;
+        this.indexMap[this.array[i1][0]] = i1;
+        this.indexMap[this.array[i2][0]] = i2;
     }
 
     offer(key, priority) {
+        if (this.indexMap[key]) {
+            throw new Error("Duplicated key: " + key);
+        }
         let n = this.size;
         this.size++;
-        this.array[n] = [key, priority];
+        this.array[n] = [key, Number.POSITIVE_INFINITY];
+        this.indexMap[key] = n;
+        this.update(key, priority);
+    }
+
+    update(key, priority) {
+        let n = this.indexMap[key];
+        if (n === undefined) {
+            throw new Error("Can't find key: " + key);
+        }
+        this.array[n][1] = priority;
         let p = this.parent(n);
         while (n > 0 && this.compare(p, n) > 0) {
             this.swap(p, n);
             n = p;
             p = this.parent(n);
         }
+        return n;
     }
 }
