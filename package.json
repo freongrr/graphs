@@ -1,0 +1,20 @@
+{
+  "name": "graphs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.mjs",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/freongrr/graphs.git"
+  },
+  "author": "Fabien Cortina <fabien.cortina@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/freongrr/graphs/issues"
+  },
+  "homepage": "https://github.com/freongrr/graphs#readme",
+  "dependencies": {}
+}
