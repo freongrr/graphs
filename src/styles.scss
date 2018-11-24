@@ -76,3 +76,14 @@ svg {
 .node.visited {
   @include coloredNode(#AFA);
 }
+
+.edge {
+
+  &.visited path {
+    stroke: green !important;
+  }
+
+  &.highlighted path {
+    stroke: red !important;
+  }
+}

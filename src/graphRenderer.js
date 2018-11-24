@@ -71,13 +71,16 @@ export default class GraphRenderer {
         // Sets the data in the selection
         this.edgeSelection = this.edgeSelection.data(this.getEdges());
 
+        // Update existing edges
+        this.edgeSelection.attr("class", edge => GraphRenderer.getEdgeClassNames(edge));
+
         // Delete edges that have been removed from the selection
         this.edgeSelection.exit().remove();
 
         // Create edges that have been added to the selection
         const edgeGroup = this.edgeSelection.enter()
             .append("svg:g")
-            .attr("class", "edge");
+            .attr("class", edge => GraphRenderer.getEdgeClassNames(edge));
 
         edgeGroup.append("svg:path");
 
@@ -136,6 +139,14 @@ export default class GraphRenderer {
         });
 
         this.nodeSelection.attr("transform", (d) => `translate(${d.x},${d.y})`);
+    }
+
+    static getEdgeClassNames(edge) {
+        let classNames = "edge";
+        if (edge.class) {
+            classNames += " " + edge.class;
+        }
+        return classNames;
     }
 
     static getNodeClassNames(node) {

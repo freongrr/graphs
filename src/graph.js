@@ -10,12 +10,11 @@ export default class Graph {
     }
 
     updateNode(id, attributes) {
-        const index = this.nodes.findIndex(n => n.id === id);
-        if (index < 0) {
-            console.warn(`Can't find node with id ${id}`);
-        } else {
-            const node = this.nodes[index];
+        const node = this.nodes.find(n => n.id === id);
+        if (node) {
             Object.assign(node, attributes);
+        } else {
+            console.warn(`Can't find node with id ${id}`);
         }
     }
 
@@ -23,6 +22,7 @@ export default class Graph {
         return [...this.nodes];
     }
 
+    // TODO : make weight an attribute
     addEdge(sourceId, destinationId, weight = 1) {
         const sourceIndex = this.nodes.findIndex(n => n.id === sourceId);
         const destinationIndex = this.nodes.findIndex(n => n.id === destinationId);
@@ -30,6 +30,8 @@ export default class Graph {
             console.warn(`Can't find node with id ${sourceId}`);
         } else if (destinationIndex < 0) {
             console.warn(`Can't find node with id ${destinationId}`);
+        } else if (this.findEdge(sourceId, destinationId)) {
+            console.warn(`Ignoring duplicated edge between ${sourceId} and ${destinationId}`);
         } else {
             this.edges.push({
                 source: this.nodes[sourceIndex],
@@ -37,6 +39,22 @@ export default class Graph {
                 weight: weight
             });
         }
+    }
+
+    updateEdge(sourceId, destinationId, attributes) {
+        const edge = this.findEdge(sourceId, destinationId);
+        if (edge) {
+            Object.assign(edge, attributes);
+        } else {
+            console.warn(`Can't find edge between ${sourceId} and ${destinationId}`);
+        }
+    }
+
+    findEdge(sourceId, destinationId) {
+        return this.edges.find(edge => {
+            return edge.source.id === sourceId && edge.target.id === destinationId ||
+                edge.target.id === sourceId && edge.source.id === destinationId;
+        });
     }
 
     getEdges() {
