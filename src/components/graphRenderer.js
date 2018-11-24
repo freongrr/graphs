@@ -1,9 +1,11 @@
-import * as d3 from "d3";
-import "./styles.scss";
-import Graph from "./graph";
+/* eslint-disable react/prop-types */
 
-const WIDTH = 560;
-const HEIGHT = 500;
+import React from "react";
+import * as d3 from "d3";
+import "./graphRenderer.scss";
+
+const WIDTH = 600;
+const HEIGHT = 600;
 const LABEL_WIDTH = 20;
 const LABEL_HEIGHT = 16;
 const NODE_RADIUS = 16;
@@ -12,13 +14,19 @@ const FORCE_BASE_DISTANCE = 50;
 const FORCE_WEIGHT_FACTOR = 10;
 const FORCE_NODE_CHARGE = -500;
 
-const EMPTY_GRAPH = new Graph();
+// TODO : implement zoom!
+export default class GraphRenderer extends React.Component {
 
-export default class GraphRenderer {
+    constructor(props) {
+        super(props);
+        this.ref = React.createRef();
+    }
 
-    constructor(selector = "body") {
-        this.graph = EMPTY_GRAPH;
+    render() {
+        return <div ref={this.ref}/>;
+    }
 
+    componentDidMount() {
         // Create an empty simulation
         // Note: using the weight alone does not work well
         // so we use a base distance and a charge to push nodes 
@@ -31,7 +39,7 @@ export default class GraphRenderer {
             .force("y", d3.forceY(HEIGHT / 2))
             .on("tick", () => this.tick());
 
-        const svg = d3.select(selector)
+        const svg = d3.select(this.ref.current)
             .append("svg")
             .attr("width", WIDTH)
             .attr("height", HEIGHT);
@@ -40,36 +48,53 @@ export default class GraphRenderer {
         // This lets us attach data to it and use it to render them
         this.edgeSelection = svg.append("svg:g").selectAll("g");
         this.nodeSelection = svg.append("svg:g").selectAll("g");
+
+        this.update(true);
     }
 
-    getNodes() {
-        return this.graph.getNodes();
+    componentDidUpdate(prevProps) {
+        // HACK - use a key to tell when the graph has changed
+        const oldGraphKey = prevProps.graph.getKey();
+        const newGraphKey = this.props.graph.getKey();
+        this.update(oldGraphKey !== newGraphKey);
     }
 
-    getEdges() {
-        return this.graph.getEdges();
-    }
-
-    setSource(graph) {
-        this.graph = graph;
-        this.update();
-    }
-
-    update() {
-        this.renderEdges();
+    update(newGraph) {
+        this.renderEdges(newGraph);
         this.renderNodes();
 
         // Update the nodes and edges inside the simulation
         this.force.nodes(this.getNodes())
             .force("link").links(this.getEdges());
 
-        // Sets alphaMin to stop the simulation when things settle
-        this.force.alphaMin(0.05).restart();
+        // We need to reset alpha and target when showing a new graph,
+        // but not when it's a minor iteration or it keeps jumping around
+        if (newGraph) {
+            this.force.alpha(1).alphaTarget(0).alphaMin(0.1).restart();
+        } else {
+            this.force.alphaMin(0.05).restart();
+        }
     }
 
-    renderEdges() {
+    getNodes() {
+        return this.props.graph.getNodes();
+    }
+
+    getEdges() {
+        return this.props.graph.getEdges();
+    }
+
+    renderEdges(newGraph) {
+        if (newGraph) {
+            // Remove all the edges when showing a new graph to avoid recycling old edges
+            // (that could have the same source, destination and weight but still be in a different place) 
+            this.edgeSelection.datum(null);
+        }
+
         // Sets the data in the selection
-        this.edgeSelection = this.edgeSelection.data(this.getEdges());
+        this.edgeSelection = this.edgeSelection.data(this.getEdges(), edge => {
+            return edge ? (edge.source.id + "_" + edge.target.id + "_" + edge.weight) : undefined;
+        });
 
         // Update existing edges
         this.edgeSelection.attr("class", edge => GraphRenderer.getEdgeClassNames(edge));
@@ -124,6 +149,7 @@ export default class GraphRenderer {
 
     // Update nodes and edges according the force simulation
     tick() {
+        // Move the link between two nodes
         this.edgeSelection.selectAll("path").attr("d", edge => {
             const sourceX = edge.source.x;
             const sourceY = edge.source.y;
@@ -132,13 +158,14 @@ export default class GraphRenderer {
             return `M${sourceX},${sourceY}L${targetX},${targetY}`;
         });
 
+        // And move the label too (there must be a way to position it relative to the path)
         this.edgeSelection.selectAll("g").attr("transform", edge => {
             const x = (edge.source.x + edge.target.x) / 2 - LABEL_WIDTH / 2;
             const y = (edge.source.y + edge.target.y) / 2 - LABEL_HEIGHT / 2;
             return `translate(${x},${y})`;
         });
 
-        this.nodeSelection.attr("transform", (d) => `translate(${d.x},${d.y})`);
+        this.nodeSelection.attr("transform", node => `translate(${node.x},${node.y})`);
     }
 
     static getEdgeClassNames(edge) {

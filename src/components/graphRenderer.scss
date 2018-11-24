@@ -80,10 +80,11 @@ svg {
 .edge {
 
   &.visited path {
-    stroke: green !important;
+    stroke: #00bf00 !important;
   }
 
   &.highlighted path {
     stroke: red !important;
+    stroke-width: 3px;
   }
 }

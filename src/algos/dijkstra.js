@@ -1,9 +1,12 @@
-import PriorityQueue from "./priorityQueue";
-import * as Constants from "./constants";
+import Algo from "./algo";
+import PriorityQueue from "../utils/priorityQueue";
+import * as Constants from "../utils/constants";
 
-export default class Dijkstra {
+export default class Dijkstra extends Algo {
 
     constructor(graph, startNodeId, endNodeId) {
+        super();
+
         this.graph = graph;
         this.startNodeId = startNodeId;
         this.endNodeId = endNodeId;
@@ -26,7 +29,9 @@ export default class Dijkstra {
     }
 
     isDone() {
-        return this.closestNodeIds.empty() || this.lastVisitedNodeId === this.endNodeId;
+        return this.lastVisitedNodeId === this.endNodeId ||
+            this.closestNodeIds.empty() ||
+            this.distances.get(this.closestNodeIds.peek()) === Number.POSITIVE_INFINITY;
     }
 
     init() {
@@ -34,6 +39,10 @@ export default class Dijkstra {
     }
 
     step() {
+        if (this.isDone()) {
+            return;
+        }
+
         const nodeId = this.closestNodeIds.poll();
         const distanceToNode = this.distances.get(nodeId);
         console.log(`Visiting ${nodeId} (distance from start: ${distanceToNode})`);
@@ -55,9 +64,11 @@ export default class Dijkstra {
                     }
                 }
             });
+
+            this.markAsVisited(nodeId);
         }
 
-        this.markAsVisited(nodeId);
+        this.checkDone(nodeId);
     }
 
     colorStartAndEndNodes() {
@@ -74,12 +85,14 @@ export default class Dijkstra {
         if (nodeId !== this.startNodeId && nodeId !== this.endNodeId) {
             this.graph.updateNode(nodeId, {class: Constants.VISITED_NODE_CLASS});
         }
+    }
 
+    checkDone(nodeId) {
         if (nodeId === this.endNodeId) {
             const distance = this.distances.get(this.endNodeId);
             console.log(`Finished: distance from ${this.startNodeId} to ${this.endNodeId} is ${distance}`);
             this.markShortestPath();
-        } else if (this.closestNodeIds.empty()) {
+        } else if (this.isDone()) {
             console.log(`Finished: can't reach ${this.endNodeId} from ${this.startNodeId}`);
         }
     }
@@ -91,21 +104,5 @@ export default class Dijkstra {
             this.graph.updateEdge(id, previousId, {class: Constants.HIGHLIGHTED_EDGE_CLASS});
             id = previousId;
         }
-    }
-
-    static run(graph, renderer, startNodeId, endNodeId, stepDelay) {
-        function advanceDijkstra() {
-            dijkstra.step();
-            renderer.update();
-            if (!dijkstra.isDone()) {
-                setTimeout(advanceDijkstra, stepDelay);
-            }
-        }
-
-        const dijkstra = new Dijkstra(graph, startNodeId, endNodeId);
-        dijkstra.init();
-        renderer.update();
-
-        setTimeout(advanceDijkstra, stepDelay);
     }
 }

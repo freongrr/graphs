@@ -3,6 +3,11 @@ export default class Graph {
     constructor() {
         this.nodes = [];
         this.edges = [];
+        this.key = "graph" + Math.round(Math.random() * 1000);
+    }
+
+    getKey() {
+        return this.key;
     }
 
     addNode(id, attributes) {

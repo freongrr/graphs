@@ -1,0 +1,46 @@
+.App {
+  $bgColor: hsl(200, 80%, 80%);
+  $fgColor: darken($bgColor, 50%);
+
+  * {
+    font: 12px sans-serif;
+  }
+
+  .fieldGroup {
+    display: inline-block;
+    margin-right: 0.5em;
+  }
+
+  input[type="number"] {
+    width: 3em;
+
+    &:disabled, &[disabled] {
+      background-color: #EEE;
+      cursor: not-allowed;
+    }
+  }
+
+  input[type="button"] {
+    color: $fgColor;
+    background-color: $bgColor;
+    border: 1px solid $fgColor;
+    margin-right: 0.5em;
+    min-width: 5em;
+    outline: none;
+
+    &:focus, &:hover {
+      background-color: lighten($bgColor, 15%);
+    }
+
+    &:active {
+      background-color: lighten($bgColor, 25%);
+    }
+
+    &:disabled, &[disabled] {
+      color: desaturate($fgColor, 75%);
+      background-color: desaturate($bgColor, 75%);
+      border-color: desaturate($fgColor, 75%);
+      cursor: not-allowed;
+    }
+  }
+}
