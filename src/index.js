@@ -1,25 +1,26 @@
 import Graph from "./graph";
 import GraphRenderer from "./graphRenderer";
+import Dijkstra from "./dijkstra";
+import {UNVISITED_NODE_CLASS} from "./constants";
 
-const g = new Graph();
+const graph = new Graph();
 for (let i = 1; i <= 10; i++) {
-    g.addNode(i, {class: "unvisited"});
+    graph.addNode(i, {class: UNVISITED_NODE_CLASS});
 }
 
-g.addEdge(1, 2, 5);
-g.addEdge(1, 3, 10);
-g.addEdge(2, 3, 6);
-g.addEdge(3, 4, 2);
-g.addEdge(3, 6, 4);
-g.addEdge(4, 5, 3);
-g.addEdge(5, 7, 8);
-g.addEdge(5, 8, 4);
-g.addEdge(5, 10, 12);
-g.addEdge(7, 9, 2);
-g.addEdge(7, 10, 6);
-
-g.updateNode(1, {class: "start"});
-g.updateNode(10, {class: "end"});
+graph.addEdge(1, 2, 5);
+graph.addEdge(1, 3, 10);
+graph.addEdge(2, 3, 6);
+graph.addEdge(3, 4, 2);
+graph.addEdge(3, 6, 4);
+graph.addEdge(4, 5, 3);
+graph.addEdge(5, 7, 8);
+graph.addEdge(5, 8, 4);
+graph.addEdge(5, 10, 12);
+graph.addEdge(7, 9, 2);
+graph.addEdge(7, 10, 6);
 
 const renderer = new GraphRenderer("#root");
-renderer.setSource(g);
+renderer.setSource(graph);
+
+Dijkstra.run(graph, renderer, 1, 10, 1000);

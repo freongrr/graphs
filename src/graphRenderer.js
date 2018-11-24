@@ -39,7 +39,7 @@ export default class GraphRenderer {
         // Create a selection for the paths and the circles
         // This lets us attach data to it and use it to render them
         this.edgeSelection = svg.append("svg:g").selectAll("g");
-        this.circle = svg.append("svg:g").selectAll("g");
+        this.nodeSelection = svg.append("svg:g").selectAll("g");
     }
 
     getNodes() {
@@ -71,10 +71,10 @@ export default class GraphRenderer {
         // Sets the data in the selection
         this.edgeSelection = this.edgeSelection.data(this.getEdges());
 
-        // Remove old edges
+        // Delete edges that have been removed from the selection
         this.edgeSelection.exit().remove();
 
-        // and redraw them
+        // Create edges that have been added to the selection
         const edgeGroup = this.edgeSelection.enter()
             .append("svg:g")
             .attr("class", "edge");
@@ -95,13 +95,16 @@ export default class GraphRenderer {
 
     renderNodes() {
         // Sets the data in the selection
-        this.circle = this.circle.data(this.getNodes(), node => node.id);
+        this.nodeSelection = this.nodeSelection.data(this.getNodes(), node => node.id);
 
-        // Remove old nodes
-        this.circle.exit().remove();
+        // Update existing nodes
+        this.nodeSelection.attr("class", node => GraphRenderer.getNodeClassNames(node));
 
-        // and redraw them
-        const nodeGroup = this.circle.enter()
+        // Delete nodes that have been removed from the selection
+        this.nodeSelection.exit().remove();
+
+        // Create nodes that have been added to the selection
+        const nodeGroup = this.nodeSelection.enter()
             .append("svg:g")
             .attr("class", node => GraphRenderer.getNodeClassNames(node));
 
@@ -113,11 +116,10 @@ export default class GraphRenderer {
             .attr("class", "id")
             .text(node => node.id);
 
-        this.circle = nodeGroup.merge(this.circle);
+        this.nodeSelection = nodeGroup.merge(this.nodeSelection);
     }
 
-    // update force layout (called automatically each iteration)
-    // TODO : we could call that manually to avoid the stabilization phase
+    // Update nodes and edges according the force simulation
     tick() {
         this.edgeSelection.selectAll("path").attr("d", edge => {
             const sourceX = edge.source.x;
@@ -133,7 +135,7 @@ export default class GraphRenderer {
             return `translate(${x},${y})`;
         });
 
-        this.circle.attr("transform", (d) => `translate(${d.x},${d.y})`);
+        this.nodeSelection.attr("transform", (d) => `translate(${d.x},${d.y})`);
     }
 
     static getNodeClassNames(node) {

@@ -1,47 +1,97 @@
 import PriorityQueue from "./priorityQueue";
+import {END_NODE_CLASS, START_NODE_CLASS, VISITED_NODE_CLASS} from "./constants";
 
-export function shortestDistance(graph, start, end) {
-    const distances = new Map();
-    const visitedNodes = new Set();
-    const closestNodes = new PriorityQueue();
+export default class Dijkstra {
 
-    graph.getNodes().forEach(n => {
-        if (n === start) {
-            distances.set(n, 0);
-            closestNodes.offer(n, 0);
-        } else {
-            distances.set(n, Number.POSITIVE_INFINITY);
-            closestNodes.offer(n, Number.POSITIVE_INFINITY);
+    constructor(graph, startNodeId, endNodeId) {
+        this.graph = graph;
+        this.startNodeId = startNodeId;
+        this.endNodeId = endNodeId;
+
+        this.distances = new Map();
+        this.visitedNodeIds = new Set();
+        this.closestNodeIds = new PriorityQueue();
+
+        graph.getNodes().forEach(node => {
+            const nodeId = node.id;
+            if (nodeId === startNodeId) {
+                this.distances.set(nodeId, 0);
+                this.closestNodeIds.offer(nodeId, 0);
+            } else {
+                this.distances.set(nodeId, Number.POSITIVE_INFINITY);
+                this.closestNodeIds.offer(nodeId, Number.POSITIVE_INFINITY);
+            }
+        });
+    }
+
+    isDone() {
+        return this.closestNodeIds.empty() || this.lastVisitedNodeId === this.endNodeId;
+    }
+
+    step() {
+        if (this.isDone()) {
+            return;
         }
-    });
 
-    while (!closestNodes.empty()) {
-        const current = closestNodes.extract();
-        console.log(`Visiting ${current}...`);
-        const distanceToCurrent = distances.get(current);
+        this.colorStartAndEndNodes();
+
+        const nodeId = this.closestNodeIds.extract();
+        const distanceToNode = this.distances.get(nodeId);
+        console.log(`Visiting ${nodeId} (distance from start: ${distanceToNode})`);
+
         // If the current node is reachable
-        if (distanceToCurrent !== Number.POSITIVE_INFINITY) {
-            graph.getEdges(current).forEach(edge => {
-                const next = edge.node;
-                const weight = edge.weight;
+        if (distanceToNode !== Number.POSITIVE_INFINITY) {
+            this.graph.getEdgesFrom(nodeId).forEach(edge => {
+                const nextNodeId = edge.target.id;
                 // And the next node has not already been visited
-                if (!visitedNodes.has(next)) {
-                    const oldDistanceToNext = distances.get(next);
-                    const distanceToNext = distanceToCurrent + weight;
+                if (!this.visitedNodeIds.has(nextNodeId)) {
+                    const oldDistanceToNext = this.distances.get(nextNodeId);
+                    const distanceToNext = distanceToNode + edge.weight;
                     if (distanceToNext < oldDistanceToNext) {
-                        distances.set(next, distanceToNext);
-                        console.log(`Updating distance to ${next} with ${distanceToNext}`);
-                        closestNodes.update(next, distanceToNext);
+                        this.distances.set(nextNodeId, distanceToNext);
+                        console.log(`Updating distance to ${nextNodeId} with ${distanceToNext}`);
+                        this.closestNodeIds.update(nextNodeId, distanceToNext);
                     }
                 }
             });
         }
 
-        visitedNodes.add(current);
-        if (current === end) {
-            break;
+        this.markAsVisited(nodeId);
+    }
+
+    colorStartAndEndNodes() {
+        if (this.visitedNodeIds.size === 0) {
+            this.graph.updateNode(this.startNodeId, {class: START_NODE_CLASS});
+            this.graph.updateNode(this.endNodeId, {class: END_NODE_CLASS});
         }
     }
 
-    return distances.get(end);
+    markAsVisited(nodeId) {
+        this.visitedNodeIds.add(nodeId);
+        this.lastVisitedNodeId = nodeId;
+
+        if (nodeId !== this.startNodeId && nodeId !== this.endNodeId) {
+            this.graph.updateNode(nodeId, {class: VISITED_NODE_CLASS});
+        }
+
+        if (nodeId === this.endNodeId) {
+            const distance = this.distances.get(this.endNodeId);
+            console.log(`Finished: distance from ${this.startNodeId} to ${this.endNodeId} is ${distance}`);
+        } else if (this.closestNodeIds.empty()) {
+            console.log(`Finished: can't reach ${this.endNodeId} from ${this.startNodeId}`);
+        }
+    }
+
+    static run(graph, renderer, startNodeId, endNodeId, stepDelay) {
+        function advanceDijkstra() {
+            dijkstra.step();
+            renderer.update();
+            if (!dijkstra.isDone()) {
+                setTimeout(advanceDijkstra, stepDelay);
+            }
+        }
+
+        const dijkstra = new Dijkstra(graph, startNodeId, endNodeId);
+        advanceDijkstra();
+    }
 }
