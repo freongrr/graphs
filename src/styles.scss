@@ -22,9 +22,19 @@ svg {
     }
   }
 
+  .edge {
+
+    rect {
+      fill: white;
+      stroke: black;
+    }
+  }
+
   .node {
 
     circle {
+      fill: white;
+      stroke: gray;
       stroke-width: 2px;
     }
 
@@ -35,4 +45,34 @@ svg {
       pointer-events: none;
     }
   }
+}
+
+// Node colors
+
+@mixin coloredNode($color) {
+
+  circle {
+    fill: $color;
+    stroke: darken($color, 50%);
+  }
+
+  text {
+    fill: darken($color, 75%);
+  }
+}
+
+.node.unvisited {
+  @include coloredNode(#ffffbf);
+}
+
+.node.start {
+  @include coloredNode(#bfeaff);
+}
+
+.node.end {
+  @include coloredNode(#ffbfbf);
+}
+
+.node.visited {
+  @include coloredNode(#AFA);
 }

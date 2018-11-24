@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import "./styles.scss";
+import Graph from "./graph";
 
 const WIDTH = 560;
 const HEIGHT = 500;
@@ -8,14 +9,15 @@ const LABEL_HEIGHT = 16;
 const NODE_RADIUS = 16;
 
 const FORCE_BASE_DISTANCE = 50;
-const FORCE_WEIGHT_FACTOR = 20;
+const FORCE_WEIGHT_FACTOR = 10;
 const FORCE_NODE_CHARGE = -500;
 
-export default class D3Graph {
+const EMPTY_GRAPH = new Graph();
+
+export default class GraphRenderer {
 
     constructor(selector = "body") {
-        this.nodes = [];
-        this.edges = [];
+        this.graph = EMPTY_GRAPH;
 
         // Create an empty simulation
         // Note: using the weight alone does not work well
@@ -40,25 +42,17 @@ export default class D3Graph {
         this.circle = svg.append("svg:g").selectAll("g");
     }
 
-    addNode(id) {
-        this.nodes.push({
-            id: id,
-            type: "unvisited"
-        });
-        this.update();
+    getNodes() {
+        return this.graph.getNodes();
     }
 
-    addEdge(sourceId, destinationId, weight = 1) {
-        const sourceIndex = this.nodes.findIndex(n => n.id === sourceId);
-        const destinationIndex = this.nodes.findIndex(n => n.id === destinationId);
-        if (sourceIndex >= 0 && destinationIndex >= 0) {
-            this.edges.push({
-                source: this.nodes[sourceIndex],
-                target: this.nodes[destinationIndex],
-                weight: weight
-            });
-            this.update();
-        }
+    getEdges() {
+        return this.graph.getEdges();
+    }
+
+    setSource(graph) {
+        this.graph = graph;
+        this.update();
     }
 
     update() {
@@ -66,8 +60,8 @@ export default class D3Graph {
         this.renderNodes();
 
         // Update the nodes and edges inside the simulation
-        this.force.nodes(this.nodes)
-            .force("link").links(this.edges);
+        this.force.nodes(this.getNodes())
+            .force("link").links(this.getEdges());
 
         // Sets alphaMin to stop the simulation when things settle
         this.force.alphaMin(0.05).restart();
@@ -75,7 +69,7 @@ export default class D3Graph {
 
     renderEdges() {
         // Sets the data in the selection
-        this.edgeSelection = this.edgeSelection.data(this.edges);
+        this.edgeSelection = this.edgeSelection.data(this.getEdges());
 
         // Remove old edges
         this.edgeSelection.exit().remove();
@@ -90,9 +84,7 @@ export default class D3Graph {
         const labelGroup = edgeGroup.append("svg:g");
         labelGroup.append("svg:rect")
             .attr("width", LABEL_WIDTH)
-            .attr("height", LABEL_HEIGHT)
-            .style("fill", "white")
-            .style("stroke", "black");
+            .attr("height", LABEL_HEIGHT);
         labelGroup.append("svg:text")
             .attr("x", LABEL_WIDTH / 2)
             .attr("y", 12)
@@ -103,7 +95,7 @@ export default class D3Graph {
 
     renderNodes() {
         // Sets the data in the selection
-        this.circle = this.circle.data(this.nodes, node => node.id);
+        this.circle = this.circle.data(this.getNodes(), node => node.id);
 
         // Remove old nodes
         this.circle.exit().remove();
@@ -111,12 +103,10 @@ export default class D3Graph {
         // and redraw them
         const nodeGroup = this.circle.enter()
             .append("svg:g")
-            .attr("class", node => D3Graph.getNodeClassNames(node));
+            .attr("class", node => GraphRenderer.getNodeClassNames(node));
 
         nodeGroup.append("svg:circle")
-            .attr("r", NODE_RADIUS)
-            .style("fill", node => D3Graph.getNodeColor(node))
-            .style("stroke", node => d3.rgb(D3Graph.getNodeColor(node)).darker().toString());
+            .attr("r", NODE_RADIUS);
         nodeGroup.append("svg:text")
             .attr("x", 0)
             .attr("y", 4)
@@ -147,15 +137,10 @@ export default class D3Graph {
     }
 
     static getNodeClassNames(node) {
-        return "node " + node.type;
-    }
-
-    static getNodeColor(node) {
-        switch (node.type) {
-            case "unvisited":
-                return "pink";
-            default:
-                return "white";
+        let classNames = "node";
+        if (node.class) {
+            classNames += " " + node.class;
         }
+        return classNames;
     }
 }
