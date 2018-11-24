@@ -2,8 +2,9 @@ const DEFAULT_COMPARATOR = (a, b) => a - b;
 
 export default class PriorityQueue {
 
-    constructor(comparator = DEFAULT_COMPARATOR) {
+    constructor(comparator = DEFAULT_COMPARATOR, lastValue = Number.POSITIVE_INFINITY) {
         this.comparator = comparator;
+        this.lastValue = lastValue;
         this.array = [];
         this.size = 0;
         this.indexMap = new Map();
@@ -25,14 +26,19 @@ export default class PriorityQueue {
         return (n + 1) * 2; // + 1 - 1
     }
 
-    extract() {
+    peek() {
         if (this.size === 0) {
             throw new Error("Queue underflow");
         }
-        const ret = this.array[0][0];
+        return this.array[0][0];
+    }
+
+    poll() {
+        const ret = this.peek();
         this.indexMap.delete(ret);
         this.size--;
         this.swap(0, this.size);
+        this.array[this.size] = null;
         this.heapify(0);
         return ret;
     }
@@ -49,6 +55,7 @@ export default class PriorityQueue {
         }
         if (head !== n) {
             this.swap(n, head);
+            this.heapify(head);
         }
     }
 
@@ -72,8 +79,7 @@ export default class PriorityQueue {
         }
         let n = this.size;
         this.size++;
-        // TODO : that only work in a min priority queue!
-        this.array[n] = [key, Number.POSITIVE_INFINITY];
+        this.array[n] = [key, this.lastValue];
         this.indexMap.set(key, n);
         this.update(key, priority);
     }

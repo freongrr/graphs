@@ -29,5 +29,10 @@
       "always"
     ],
     "no-console": "off"
+  },
+  "globals": {
+    "expect": false,
+    "jest": false,
+    "test": false
   }
 }

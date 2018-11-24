@@ -34,7 +34,7 @@ export default class Dijkstra {
     }
 
     step() {
-        const nodeId = this.closestNodeIds.extract();
+        const nodeId = this.closestNodeIds.poll();
         const distanceToNode = this.distances.get(nodeId);
         console.log(`Visiting ${nodeId} (distance from start: ${distanceToNode})`);
 
