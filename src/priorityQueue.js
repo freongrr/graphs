@@ -6,7 +6,7 @@ export default class PriorityQueue {
         this.comparator = comparator;
         this.array = [];
         this.size = 0;
-        this.indexMap = {};
+        this.indexMap = new Map();
     }
 
     empty() {
@@ -30,7 +30,7 @@ export default class PriorityQueue {
             throw new Error("Queue underflow");
         }
         const ret = this.array[0][0];
-        delete this.indexMap[ret];
+        this.indexMap.delete(ret);
         this.size--;
         this.swap(0, this.size);
         this.heapify(0);
@@ -62,24 +62,24 @@ export default class PriorityQueue {
         const tmp = this.array[i1];
         this.array[i1] = this.array[i2];
         this.array[i2] = tmp;
-        this.indexMap[this.array[i1][0]] = i1;
-        this.indexMap[this.array[i2][0]] = i2;
+        this.indexMap.set(this.array[i1][0], i1);
+        this.indexMap.set(this.array[i2][0], i2);
     }
 
     offer(key, priority) {
-        if (this.indexMap[key]) {
+        if (this.indexMap.has(key)) {
             throw new Error("Duplicated key: " + key);
         }
         let n = this.size;
         this.size++;
         // TODO : that only work in a min priority queue!
         this.array[n] = [key, Number.POSITIVE_INFINITY];
-        this.indexMap[key] = n;
+        this.indexMap.set(key, n);
         this.update(key, priority);
     }
 
     update(key, priority) {
-        let n = this.indexMap[key];
+        let n = this.indexMap.get(key);
         if (n === undefined) {
             throw new Error("Can't find key: " + key);
         }
