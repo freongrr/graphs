@@ -1,0 +1,38 @@
+svg {
+  background-color: #FFF;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+
+  .edge {
+
+    path {
+      fill: none;
+      stroke: black;
+      stroke-width: 2px;
+    }
+
+    text {
+      text-anchor: middle;
+      font: 12px sans-serif;
+      font-weight: bold;
+      pointer-events: none;
+    }
+  }
+
+  .node {
+
+    circle {
+      stroke-width: 2px;
+    }
+
+    text {
+      text-anchor: middle;
+      font: 12px sans-serif;
+      font-weight: bold;
+      pointer-events: none;
+    }
+  }
+}
