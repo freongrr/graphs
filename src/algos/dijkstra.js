@@ -4,6 +4,7 @@ import PriorityQueue from "../utils/priorityQueue";
 import * as Constants from "../utils/constants";
 import type {NodeId} from "../utils/graph";
 import Graph from "../utils/graph";
+import {highlightPath} from "./algoUtils";
 
 export default class Dijkstra implements Algo {
 
@@ -12,7 +13,7 @@ export default class Dijkstra implements Algo {
     distances: Map<NodeId, number>;
     visitedNodeIds: Set<NodeId>;
     closestNodeIds: PriorityQueue<NodeId>;
-    previousNodeId: Map<NodeId, NodeId>;
+    predecessors: Map<NodeId, NodeId>;
     lastVisitedNodeId: ?NodeId;
 
     constructor(startNodeId: NodeId, endNodeId: NodeId) {
@@ -22,7 +23,7 @@ export default class Dijkstra implements Algo {
         this.distances = new Map();
         this.visitedNodeIds = new Set();
         this.closestNodeIds = new PriorityQueue();
-        this.previousNodeId = new Map();
+        this.predecessors = new Map();
     }
 
     isDone(): boolean {
@@ -72,7 +73,7 @@ export default class Dijkstra implements Algo {
                         this.distances.set(nextNodeId, distanceToNext);
                         console.log(`Updating distance to ${nextNodeId} with ${distanceToNext}`);
                         this.closestNodeIds.update(nextNodeId, distanceToNext);
-                        this.previousNodeId.set(nextNodeId, nodeId);
+                        this.predecessors.set(nextNodeId, nodeId);
                     }
                 }
             });
@@ -102,14 +103,6 @@ export default class Dijkstra implements Algo {
     }
 
     markShortestPath(graph: Graph): Graph {
-        let id = this.endNodeId;
-        while (id && id !== this.startNodeId) {
-            const previousId = this.previousNodeId.get(id);
-            if (previousId) {
-                graph = Graph.updateEdge(graph, id, previousId, {class: Constants.HIGHLIGHTED_EDGE_CLASS});
-            }
-            id = previousId;
-        }
-        return graph;
+        return highlightPath(graph, this.startNodeId, this.endNodeId, this.predecessors);
     }
 }

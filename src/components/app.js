@@ -20,6 +20,7 @@ type AppState = {
     graphBuilder: GraphBuilder,
     graphBuilderParams: mixed[],
     graph: Graph,
+    originalGraph: Graph,
     algoBuilder: AlgoBuilder,
     algoBuilderParams: mixed[],
     algo: ?Algo,
@@ -33,11 +34,15 @@ export default class App extends React.Component<{}, AppState> {
     constructor(props: {}) {
         super(props);
 
+        const defaultGraphBuilder = graphBuilders[0];
+        const initialAlgo = defaultGraphBuilder.build();
+        const defaultAlgoBuilder = algoBuilders[0];
         this.state = {
-            graphBuilder: graphBuilders[0],
+            graphBuilder: defaultGraphBuilder,
             graphBuilderParams: [],
-            graph: graphBuilders[0].build(),
-            algoBuilder: algoBuilders[0],
+            graph: initialAlgo,
+            originalGraph: initialAlgo,
+            algoBuilder: defaultAlgoBuilder,
             algoBuilderParams: [],
             algo: null,
             playing: false,
@@ -71,6 +76,7 @@ export default class App extends React.Component<{}, AppState> {
                         onAlgoBuilderChange={this.setAlgoBuilder}
                         onAlgoBuilderParamsChange={this.setAlgoBuilderParams}/>
                     <div className="buttonGroup">
+                        <input type="button" value="Reset" onClick={this.reset} disabled={isPlaying}/>
                         {isPlaying && <input type="button" value="Stop" onClick={this.stop}/>}
                         {!isPlaying && <input type="button" value="Play" onClick={this.play} disabled={isDone}/>}
                         <input type="button" value="Step" onClick={this.step} disabled={isPlaying || isDone}/>
@@ -97,6 +103,7 @@ export default class App extends React.Component<{}, AppState> {
         const graph = this.state.graphBuilder.build(...this.state.graphBuilderParams);
         this.setState({
             graph: graph,
+            originalGraph: graph,
             playing: false,
             algo: null
         });
@@ -104,8 +111,10 @@ export default class App extends React.Component<{}, AppState> {
 
     setAlgoBuilder = (algoBuilder: AlgoBuilder) => {
         this.setState({
+            graph: this.state.originalGraph,
             algoBuilder: algoBuilder,
-            algoBuilderParams: algoBuilder.parameters.map(p => p.default)
+            algoBuilderParams: algoBuilder.parameters.map(p => p.default),
+            algo: null
         });
     };
 
@@ -135,6 +144,10 @@ export default class App extends React.Component<{}, AppState> {
             clearTimeout(this.timeout);
             this.setState({playing: false});
         }
+    };
+
+    reset = () => {
+        this.setState({graph: this.state.originalGraph});
     };
 
     step = () => {
