@@ -2,7 +2,6 @@
 
 import React from "react";
 import * as d3 from "d3";
-import "./graphRenderer.scss";
 
 const WIDTH = 600;
 const HEIGHT = 600;

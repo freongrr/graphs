@@ -9,7 +9,6 @@ import GraphRenderer from "./graphRenderer";
 import type {Algo} from "../algos/algo";
 import GraphBuilderSelector from "./graphBuilderSelector";
 import AlgoBuilderSelector from "./algoBuilderSelector";
-import "./app.scss";
 
 const STEP_DELAY = 1000;
 
