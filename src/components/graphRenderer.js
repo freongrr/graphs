@@ -23,7 +23,7 @@ export default class GraphRenderer extends React.Component {
     }
 
     render() {
-        return <div ref={this.ref}/>;
+        return <div ref={this.ref} className="graphRenderer"/>;
     }
 
     componentDidMount() {

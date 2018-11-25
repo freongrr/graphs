@@ -22,7 +22,7 @@ export default class GraphBuilderSelector extends React.Component<GraphBuilderSe
         return (
             <div className="graphBuilderSelector">
                 <div className="fieldGroup">
-                    <label htmlFor="graphType">Graph: </label>
+                    <label htmlFor="graphType">Type: </label>
                     <select id="graphType" disabled={this.props.disabled}
                         value={graphBuilderIndex} onChange={this.setGraphBuilder}>
                         {graphBuilders.map((builder, index) => {

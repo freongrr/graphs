@@ -7,8 +7,7 @@
   }
 
   .fieldGroup {
-    display: inline-block;
-    margin-right: 0.5em;
+    line-height: 2em;
   }
 
   // Change the mouse pointer for all fields
@@ -50,8 +49,25 @@
     }
   }
 
-  .graphBuilderSelector {
-    padding: 0.5em;
-    line-height: 2em;
+  .graphControls, .algoControls {
+    padding: 0 1em;
+    float: left;
+
+    h2 {
+      margin: 0;
+      font-weight: bold;
+    }
+
+    .buttonGroup {
+      padding: 0.5em 0;
+
+      input[type="button"] {
+        margin-right: 0.5em;
+      }
+    }
+  }
+
+  .graphRenderer {
+    clear: both;
   }
 }
