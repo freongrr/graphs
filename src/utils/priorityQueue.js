@@ -1,8 +1,17 @@
+//@flow
 const DEFAULT_COMPARATOR = (a, b) => a - b;
 
-export default class PriorityQueue {
+type Comparator<T> = (T, T) => number;
 
-    constructor(comparator = DEFAULT_COMPARATOR, lastValue = Number.POSITIVE_INFINITY) {
+export default class PriorityQueue<T> {
+
+    comparator: Comparator<number>;
+    lastValue: number;
+    array: [T, number][];
+    size: number;
+    indexMap: Map<T, number>;
+
+    constructor(comparator: Comparator<number> = DEFAULT_COMPARATOR, lastValue: number = Number.POSITIVE_INFINITY) {
         this.comparator = comparator;
         this.lastValue = lastValue;
         this.array = [];
@@ -10,43 +19,50 @@ export default class PriorityQueue {
         this.indexMap = new Map();
     }
 
-    empty() {
+    empty(): boolean {
         return this.size === 0;
     }
 
-    parent(n) {
-        return Math.floor((n + 1) / 2) - 1;
+    static parent(index: number): number {
+        return Math.floor((index + 1) / 2) - 1;
     }
 
-    left(n) {
-        return (n + 1) * 2 - 1;
+    static left(index: number): number {
+        return (index + 1) * 2 - 1;
     }
 
-    right(n) {
-        return (n + 1) * 2; // + 1 - 1
+    static right(index: number): number {
+        return (index + 1) * 2; // + 1 - 1
     }
 
-    peek() {
+    value(index: number): T {
+        return this.array[index][0];
+    }
+
+    priority(index: number): number {
+        return this.array[index][1];
+    }
+
+    peek(): T {
         if (this.size === 0) {
             throw new Error("Queue underflow");
         }
-        return this.array[0][0];
+        return this.value(0);
     }
 
-    poll() {
+    poll(): T {
         const ret = this.peek();
         this.indexMap.delete(ret);
         this.size--;
         this.swap(0, this.size);
-        this.array[this.size] = null;
         this.heapify(0);
         return ret;
     }
 
-    heapify(n) {
+    heapify(n: number): void {
         let head = n;
-        const l = this.left(n);
-        const r = this.right(n);
+        const l = PriorityQueue.left(n);
+        const r = PriorityQueue.right(n);
         if (l < this.size && this.compare(l, head) < 0) {
             head = l;
         }
@@ -59,23 +75,24 @@ export default class PriorityQueue {
         }
     }
 
-    compare(i1, i2) {
-        const p1 = this.array[i1][1];
-        const p2 = this.array[i2][1];
-        return this.comparator(p1, p2);
+    compare(index1: number, index2: number): number {
+        const priority1 = this.priority(index1);
+        const priority2 = this.priority(index2);
+        return this.comparator(priority1, priority2);
     }
 
-    swap(i1, i2) {
-        const tmp = this.array[i1];
-        this.array[i1] = this.array[i2];
-        this.array[i2] = tmp;
-        this.indexMap.set(this.array[i1][0], i1);
-        this.indexMap.set(this.array[i2][0], i2);
+
+    swap(index1: number, index2: number): void {
+        const tmp = this.array[index1];
+        this.array[index1] = this.array[index2];
+        this.array[index2] = tmp;
+        this.indexMap.set(this.value(index1), index1);
+        this.indexMap.set(this.value(index2), index2);
     }
 
-    offer(key, priority) {
+    offer(key: T, priority: number): void {
         if (this.indexMap.has(key)) {
-            throw new Error("Duplicated key: " + key);
+            throw new Error("Duplicated key: " + (key: any));
         }
         let n = this.size;
         this.size++;
@@ -84,18 +101,17 @@ export default class PriorityQueue {
         this.update(key, priority);
     }
 
-    update(key, priority) {
+    update(key: T, priority: number): void {
         let n = this.indexMap.get(key);
         if (n === undefined) {
-            throw new Error("Can't find key: " + key);
+            throw new Error("Can't find key: " + (key: any));
         }
         this.array[n][1] = priority;
-        let p = this.parent(n);
+        let p = PriorityQueue.parent(n);
         while (n > 0 && this.compare(p, n) > 0) {
             this.swap(p, n);
             n = p;
-            p = this.parent(n);
+            p = PriorityQueue.parent(n);
         }
-        return n;
     }
 }

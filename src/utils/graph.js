@@ -1,20 +1,30 @@
+//@flow
+
+export type NodeId = number;
+export type Node = { id: NodeId };
+export type Edge = { source: Node, target: Node, weight: number };
+
 export default class Graph {
 
+    key: string;
+    nodes: Node[];
+    edges: Edge[];
+
     constructor() {
+        this.key = "graph" + Math.round(Math.random() * 1000);
         this.nodes = [];
         this.edges = [];
-        this.key = "graph" + Math.round(Math.random() * 1000);
     }
 
     getKey() {
         return this.key;
     }
 
-    addNode(id, attributes) {
+    addNode(id: NodeId, attributes: {}) {
         this.nodes.push({id: id, ...attributes});
     }
 
-    updateNode(id, attributes) {
+    updateNode(id: NodeId, attributes: {}) {
         const node = this.nodes.find(n => n.id === id);
         if (node) {
             Object.assign(node, attributes);
@@ -28,7 +38,7 @@ export default class Graph {
     }
 
     // TODO : make weight an attribute
-    addEdge(sourceId, destinationId, weight = 1) {
+    addEdge(sourceId: NodeId, destinationId: NodeId, weight: number = 1) {
         const sourceIndex = this.nodes.findIndex(n => n.id === sourceId);
         const destinationIndex = this.nodes.findIndex(n => n.id === destinationId);
         if (sourceIndex < 0) {
@@ -46,7 +56,7 @@ export default class Graph {
         }
     }
 
-    updateEdge(sourceId, destinationId, attributes) {
+    updateEdge(sourceId: NodeId, destinationId: NodeId, attributes: {}) {
         const edge = this.findEdge(sourceId, destinationId);
         if (edge) {
             Object.assign(edge, attributes);
@@ -55,7 +65,7 @@ export default class Graph {
         }
     }
 
-    findEdge(sourceId, destinationId) {
+    findEdge(sourceId: NodeId, destinationId: NodeId) {
         return this.edges.find(edge => {
             return edge.source.id === sourceId && edge.target.id === destinationId ||
                 edge.target.id === sourceId && edge.source.id === destinationId;
@@ -66,19 +76,19 @@ export default class Graph {
         return [...this.edges];
     }
 
-    getEdgesFrom(nodeId) {
-        return this.edges.flatMap(edge => {
+    getEdgesFrom(nodeId: NodeId) {
+        const results = [];
+        this.edges.forEach(edge => {
             if (edge.source.id === nodeId) {
-                return [edge];
+                results.push(edge);
             } else if (edge.target.id === nodeId) {
-                return [Graph.reverse(edge)];
-            } else {
-                return [];
+                results.push(Graph.reverse(edge));
             }
         });
+        return results;
     }
 
-    static reverse(edge) {
+    static reverse(edge: Edge) {
         return {
             source: edge.target,
             target: edge.source,

@@ -1,5 +1,8 @@
+/* global require:false, module:false, __dirname:false */
+
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const FlowtypePlugin = require("flowtype-loader/plugin");
 
 const APP_DIR = path.resolve(__dirname, "src/");
 const BUILD_DIR = path.resolve(__dirname, "dist/");
@@ -20,6 +23,7 @@ module.exports = {
             test: /\.js$/,
             use: [
                 "source-map-loader",
+                "flowtype-loader"
             ],
             enforce: "pre"
         }, {
@@ -40,6 +44,7 @@ module.exports = {
     },
     devtool: "source-maps",
     plugins: [
+        new FlowtypePlugin(),
         new HtmlWebpackPlugin({
             template: APP_DIR + "/index.html"
         })

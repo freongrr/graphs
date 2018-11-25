@@ -1,7 +1,8 @@
+//@flow
 import Graph from "./graph";
 import {UNVISITED_NODE_CLASS} from "./constants";
 
-export function createSimpleGraph() {
+function createDefaultGraph(): Graph {
     const graph = new Graph();
     for (let i = 1; i <= 10; i++) {
         graph.addNode(i, {class: UNVISITED_NODE_CLASS});
@@ -22,7 +23,7 @@ export function createSimpleGraph() {
     return graph;
 }
 
-export function createRandomGraph(minNodeCount, maxNodeCount, minEdgeCount, maxEdgeCount) {
+function createRandomGraph(minNodeCount, maxNodeCount, minEdgeCount, maxEdgeCount): Graph {
     const graph = new Graph();
     const nodeCount = Math.round(minNodeCount + Math.random() * (maxNodeCount - minNodeCount));
     const edgeCount = Math.round(minEdgeCount + Math.random() * (maxEdgeCount - minEdgeCount));
@@ -40,3 +41,25 @@ export function createRandomGraph(minNodeCount, maxNodeCount, minEdgeCount, maxE
 
     return graph;
 }
+
+export type GraphBuilderParam = { name: string, type: mixed, default?: mixed };
+export type GraphBuilder = {
+    name: string,
+    parameters: GraphBuilderParam[],
+    build: (...any) => Graph
+};
+
+const BUILDERS = ([{
+    name: "Default",
+    parameters: [],
+    build: createDefaultGraph
+}, {
+    name: "Random",
+    parameters: [
+        {name: "Nodes", type: Number, default: 10},
+        {name: "Edges", type: Number, default: 10}
+    ],
+    build: (nodeCount: number, edgeCount: number) => createRandomGraph(nodeCount, nodeCount, edgeCount, edgeCount)
+}]: GraphBuilder[]);
+
+export default BUILDERS;
