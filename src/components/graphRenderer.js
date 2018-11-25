@@ -1,7 +1,8 @@
-/* eslint-disable react/prop-types */
-
+//@flow
 import React from "react";
 import * as d3 from "d3";
+import type {NodeId} from "../utils/graph";
+import Graph from "../utils/graph";
 
 const WIDTH = 600;
 const HEIGHT = 600;
@@ -13,10 +14,23 @@ const FORCE_BASE_DISTANCE = 50;
 const FORCE_WEIGHT_FACTOR = 10;
 const FORCE_NODE_CHARGE = -500;
 
-// TODO : implement zoom!
-export default class GraphRenderer extends React.Component {
+type GraphRendererProps = {
+    graph: Graph
+};
 
-    constructor(props) {
+// TODO : Supertype?
+type D3Node = { id: NodeId, x: number, y: number, class: string };
+type D3Edge = { source: D3Node, target: D3Node, weight: number, class: string };
+
+// TODO : implement zoom!
+export default class GraphRenderer extends React.Component<GraphRendererProps> {
+
+    ref: any;
+    force: any;
+    edgeSelection: any;
+    nodeSelection: any;
+
+    constructor(props: GraphRendererProps) {
         super(props);
         this.ref = React.createRef();
     }
@@ -31,8 +45,8 @@ export default class GraphRenderer extends React.Component {
         // so we use a base distance and a charge to push nodes 
         this.force = d3.forceSimulation()
             .force("link", d3.forceLink()
-                .id(node => node.id)
-                .distance(edge => FORCE_BASE_DISTANCE + (FORCE_WEIGHT_FACTOR * edge.weight)))
+                .id((node: D3Node) => node.id)
+                .distance((edge: D3Edge) => FORCE_BASE_DISTANCE + (FORCE_WEIGHT_FACTOR * edge.weight)))
             .force("charge", d3.forceManyBody().strength(FORCE_NODE_CHARGE))
             .force("x", d3.forceX(WIDTH / 2))
             .force("y", d3.forceY(HEIGHT / 2))
@@ -51,14 +65,14 @@ export default class GraphRenderer extends React.Component {
         this.update(true);
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: GraphRendererProps) {
         // HACK - use a key to tell when the graph has changed
         const oldGraphKey = prevProps.graph.getKey();
         const newGraphKey = this.props.graph.getKey();
         this.update(oldGraphKey !== newGraphKey);
     }
 
-    update(newGraph) {
+    update(newGraph: boolean) {
         this.renderEdges(newGraph);
         this.renderNodes();
 
@@ -83,7 +97,7 @@ export default class GraphRenderer extends React.Component {
         return this.props.graph.getEdges();
     }
 
-    renderEdges(newGraph) {
+    renderEdges(newGraph: boolean) {
         if (newGraph) {
             // Remove all the edges when showing a new graph to avoid recycling old edges
             // (that could have the same source, destination and weight but still be in a different place) 
@@ -91,12 +105,12 @@ export default class GraphRenderer extends React.Component {
         }
 
         // Sets the data in the selection
-        this.edgeSelection = this.edgeSelection.data(this.getEdges(), edge => {
+        this.edgeSelection = this.edgeSelection.data(this.getEdges(), (edge: D3Edge) => {
             return edge ? (edge.source.id + "_" + edge.target.id + "_" + edge.weight) : undefined;
         });
 
         // Update existing edges
-        this.edgeSelection.attr("class", edge => GraphRenderer.getEdgeClassNames(edge));
+        this.edgeSelection.attr("class", (edge: D3Edge) => GraphRenderer.getEdgeClassNames(edge));
 
         // Delete edges that have been removed from the selection
         this.edgeSelection.exit().remove();
@@ -104,7 +118,7 @@ export default class GraphRenderer extends React.Component {
         // Create edges that have been added to the selection
         const edgeGroup = this.edgeSelection.enter()
             .append("svg:g")
-            .attr("class", edge => GraphRenderer.getEdgeClassNames(edge));
+            .attr("class", (edge: D3Edge) => GraphRenderer.getEdgeClassNames(edge));
 
         edgeGroup.append("svg:path");
 
@@ -115,17 +129,17 @@ export default class GraphRenderer extends React.Component {
         labelGroup.append("svg:text")
             .attr("x", LABEL_WIDTH / 2)
             .attr("y", 12)
-            .text(edge => edge.weight);
+            .text((edge: D3Edge) => edge.weight);
 
         this.edgeSelection = edgeGroup.merge(this.edgeSelection);
     }
 
     renderNodes() {
         // Sets the data in the selection
-        this.nodeSelection = this.nodeSelection.data(this.getNodes(), node => node.id);
+        this.nodeSelection = this.nodeSelection.data(this.getNodes(), (node: D3Node) => node.id);
 
         // Update existing nodes
-        this.nodeSelection.attr("class", node => GraphRenderer.getNodeClassNames(node));
+        this.nodeSelection.attr("class", (node: D3Node) => GraphRenderer.getNodeClassNames(node));
 
         // Delete nodes that have been removed from the selection
         this.nodeSelection.exit().remove();
@@ -133,7 +147,7 @@ export default class GraphRenderer extends React.Component {
         // Create nodes that have been added to the selection
         const nodeGroup = this.nodeSelection.enter()
             .append("svg:g")
-            .attr("class", node => GraphRenderer.getNodeClassNames(node));
+            .attr("class", (node: D3Node) => GraphRenderer.getNodeClassNames(node));
 
         nodeGroup.append("svg:circle")
             .attr("r", NODE_RADIUS);
@@ -141,7 +155,7 @@ export default class GraphRenderer extends React.Component {
             .attr("x", 0)
             .attr("y", 4)
             .attr("class", "id")
-            .text(node => node.id);
+            .text((node: D3Node) => node.id);
 
         this.nodeSelection = nodeGroup.merge(this.nodeSelection);
     }
@@ -149,7 +163,7 @@ export default class GraphRenderer extends React.Component {
     // Update nodes and edges according the force simulation
     tick() {
         // Move the link between two nodes
-        this.edgeSelection.selectAll("path").attr("d", edge => {
+        this.edgeSelection.selectAll("path").attr("d", (edge: D3Edge) => {
             const sourceX = edge.source.x;
             const sourceY = edge.source.y;
             const targetX = edge.target.x;
@@ -158,16 +172,16 @@ export default class GraphRenderer extends React.Component {
         });
 
         // And move the label too (there must be a way to position it relative to the path)
-        this.edgeSelection.selectAll("g").attr("transform", edge => {
+        this.edgeSelection.selectAll("g").attr("transform", (edge: D3Edge) => {
             const x = (edge.source.x + edge.target.x) / 2 - LABEL_WIDTH / 2;
             const y = (edge.source.y + edge.target.y) / 2 - LABEL_HEIGHT / 2;
             return `translate(${x},${y})`;
         });
 
-        this.nodeSelection.attr("transform", node => `translate(${node.x},${node.y})`);
+        this.nodeSelection.attr("transform", (node: D3Node) => `translate(${node.x},${node.y})`);
     }
 
-    static getEdgeClassNames(edge) {
+    static getEdgeClassNames(edge: D3Edge) {
         let classNames = "edge";
         if (edge.class) {
             classNames += " " + edge.class;
@@ -175,7 +189,7 @@ export default class GraphRenderer extends React.Component {
         return classNames;
     }
 
-    static getNodeClassNames(node) {
+    static getNodeClassNames(node: D3Node) {
         let classNames = "node";
         if (node.class) {
             classNames += " " + node.class;
