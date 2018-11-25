@@ -1,14 +1,10 @@
-export default class Algo {
+// @flow
 
-    isDone() {
-        throw new Error("Not implemented");
-    }
+export interface Algo {
 
-    init() {
-        throw new Error("Not implemented");
-    }
+    isDone(): boolean;
 
-    step() {
-        throw new Error("Not implemented");
-    }
+    init(): void;
+
+    step(): void;
 }

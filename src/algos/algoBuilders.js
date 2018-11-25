@@ -1,5 +1,5 @@
 //@flow
-import Algo from "./algo";
+import type {Algo} from "./algo";
 import Dijkstra from "./dijkstra";
 import Graph from "../utils/graph";
 

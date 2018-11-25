@@ -6,7 +6,7 @@ import graphBuilders from "../utils/graphBuilders";
 import type {AlgoBuilder} from "../algos/algoBuilders";
 import algoBuilders from "../algos/algoBuilders";
 import GraphRenderer from "./graphRenderer";
-import Algo from "../algos/algo";
+import type {Algo} from "../algos/algo";
 import GraphBuilderSelector from "./graphBuilderSelector";
 import AlgoBuilderSelector from "./algoBuilderSelector";
 import "./app.scss";

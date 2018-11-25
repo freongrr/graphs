@@ -1,12 +1,22 @@
-import Algo from "./algo";
+//@flow
+import type {Algo} from "./algo";
 import PriorityQueue from "../utils/priorityQueue";
 import * as Constants from "../utils/constants";
+import type {NodeId} from "../utils/graph";
+import Graph from "../utils/graph";
 
-export default class Dijkstra extends Algo {
+export default class Dijkstra implements Algo {
 
-    constructor(graph, startNodeId, endNodeId) {
-        super();
+    graph: Graph;
+    startNodeId: NodeId;
+    endNodeId: NodeId;
+    distances: Map<NodeId, number>;
+    visitedNodeIds: Set<NodeId>;
+    closestNodeIds: PriorityQueue<NodeId>;
+    previousNodeId: Map<NodeId, NodeId>;
+    lastVisitedNodeId: ?NodeId;
 
+    constructor(graph: Graph, startNodeId: NodeId, endNodeId: NodeId) {
         this.graph = graph;
         this.startNodeId = startNodeId;
         this.endNodeId = endNodeId;
@@ -28,23 +38,23 @@ export default class Dijkstra extends Algo {
         });
     }
 
-    isDone() {
+    isDone(): boolean {
         return this.lastVisitedNodeId === this.endNodeId ||
             this.closestNodeIds.empty() ||
             this.distances.get(this.closestNodeIds.peek()) === Number.POSITIVE_INFINITY;
     }
 
-    init() {
+    init(): void {
         this.colorStartAndEndNodes();
     }
 
-    step() {
+    step(): void {
         if (this.isDone()) {
             return;
         }
 
         const nodeId = this.closestNodeIds.poll();
-        const distanceToNode = this.distances.get(nodeId);
+        const distanceToNode = (this.distances.get(nodeId): any);
         console.log(`Visiting ${nodeId} (distance from start: ${distanceToNode})`);
 
         // If the current node is reachable
@@ -54,7 +64,7 @@ export default class Dijkstra extends Algo {
                 // And the next node has not already been visited
                 if (!this.visitedNodeIds.has(nextNodeId)) {
                     this.graph.updateEdge(nodeId, nextNodeId, {class: Constants.VISITED_EDGE_CLASS});
-                    const oldDistanceToNext = this.distances.get(nextNodeId);
+                    const oldDistanceToNext = (this.distances.get(nextNodeId): any);
                     const distanceToNext = distanceToNode + edge.weight;
                     if (distanceToNext < oldDistanceToNext) {
                         this.distances.set(nextNodeId, distanceToNext);
@@ -78,7 +88,7 @@ export default class Dijkstra extends Algo {
         }
     }
 
-    markAsVisited(nodeId) {
+    markAsVisited(nodeId: NodeId) {
         this.visitedNodeIds.add(nodeId);
         this.lastVisitedNodeId = nodeId;
 
@@ -87,9 +97,9 @@ export default class Dijkstra extends Algo {
         }
     }
 
-    checkDone(nodeId) {
+    checkDone(nodeId: NodeId) {
         if (nodeId === this.endNodeId) {
-            const distance = this.distances.get(this.endNodeId);
+            const distance = (this.distances.get(this.endNodeId): any);
             console.log(`Finished: distance from ${this.startNodeId} to ${this.endNodeId} is ${distance}`);
             this.markShortestPath();
         } else if (this.isDone()) {
@@ -99,9 +109,11 @@ export default class Dijkstra extends Algo {
 
     markShortestPath() {
         let id = this.endNodeId;
-        while (id !== this.startNodeId) {
+        while (id && id !== this.startNodeId) {
             const previousId = this.previousNodeId.get(id);
-            this.graph.updateEdge(id, previousId, {class: Constants.HIGHLIGHTED_EDGE_CLASS});
+            if (previousId) {
+                this.graph.updateEdge(id, previousId, {class: Constants.HIGHLIGHTED_EDGE_CLASS});
+            }
             id = previousId;
         }
     }
