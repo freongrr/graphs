@@ -7,7 +7,6 @@ import Graph from "../utils/graph";
 
 export default class Dijkstra implements Algo {
 
-    graph: Graph;
     startNodeId: NodeId;
     endNodeId: NodeId;
     distances: Map<NodeId, number>;
@@ -16,8 +15,7 @@ export default class Dijkstra implements Algo {
     previousNodeId: Map<NodeId, NodeId>;
     lastVisitedNodeId: ?NodeId;
 
-    constructor(graph: Graph, startNodeId: NodeId, endNodeId: NodeId) {
-        this.graph = graph;
+    constructor(startNodeId: NodeId, endNodeId: NodeId) {
         this.startNodeId = startNodeId;
         this.endNodeId = endNodeId;
 
@@ -25,17 +23,6 @@ export default class Dijkstra implements Algo {
         this.visitedNodeIds = new Set();
         this.closestNodeIds = new PriorityQueue();
         this.previousNodeId = new Map();
-
-        graph.getNodes().forEach(node => {
-            const nodeId = node.id;
-            if (nodeId === startNodeId) {
-                this.distances.set(nodeId, 0);
-                this.closestNodeIds.offer(nodeId, 0);
-            } else {
-                this.distances.set(nodeId, Number.POSITIVE_INFINITY);
-                this.closestNodeIds.offer(nodeId, Number.POSITIVE_INFINITY);
-            }
-        });
     }
 
     isDone(): boolean {
@@ -44,26 +31,41 @@ export default class Dijkstra implements Algo {
             this.distances.get(this.closestNodeIds.peek()) === Number.POSITIVE_INFINITY;
     }
 
-    init(): void {
-        this.colorStartAndEndNodes();
+    init(graph: Graph): Graph {
+        graph.getNodes().forEach(node => {
+            const nodeId = node.id;
+            if (nodeId === this.startNodeId) {
+                this.distances.set(nodeId, 0);
+                this.closestNodeIds.offer(nodeId, 0);
+            } else {
+                this.distances.set(nodeId, Number.POSITIVE_INFINITY);
+                this.closestNodeIds.offer(nodeId, Number.POSITIVE_INFINITY);
+            }
+        });
+        graph = Graph.updateNode(graph, this.startNodeId, {class: Constants.START_NODE_CLASS});
+        graph = Graph.updateNode(graph, this.endNodeId, {class: Constants.END_NODE_CLASS});
+        return graph;
     }
 
-    step(): void {
-        if (this.isDone()) {
-            return;
+    step(graph: Graph): Graph {
+        if (!this.isDone()) {
+            graph = this.doStep(graph);
         }
+        return graph;
+    }
 
+    doStep(graph: Graph): Graph {
         const nodeId = this.closestNodeIds.poll();
         const distanceToNode = (this.distances.get(nodeId): any);
         console.log(`Visiting ${nodeId} (distance from start: ${distanceToNode})`);
 
         // If the current node is reachable
         if (distanceToNode !== Number.POSITIVE_INFINITY) {
-            this.graph.getEdgesFrom(nodeId).forEach(edge => {
+            graph.getEdgesFrom(nodeId).forEach(edge => {
                 const nextNodeId = edge.target.id;
                 // And the next node has not already been visited
                 if (!this.visitedNodeIds.has(nextNodeId)) {
-                    this.graph.updateEdge(nodeId, nextNodeId, {class: Constants.VISITED_EDGE_CLASS});
+                    graph = Graph.updateEdge(graph, nodeId, nextNodeId, {class: Constants.VISITED_EDGE_CLASS});
                     const oldDistanceToNext = (this.distances.get(nextNodeId): any);
                     const distanceToNext = distanceToNode + edge.weight;
                     if (distanceToNext < oldDistanceToNext) {
@@ -75,46 +77,39 @@ export default class Dijkstra implements Algo {
                 }
             });
 
-            this.markAsVisited(nodeId);
+            graph = this.markAsVisited(graph, nodeId);
         }
 
-        this.checkDone(nodeId);
-    }
-
-    colorStartAndEndNodes() {
-        if (this.visitedNodeIds.size === 0) {
-            this.graph.updateNode(this.startNodeId, {class: Constants.START_NODE_CLASS});
-            this.graph.updateNode(this.endNodeId, {class: Constants.END_NODE_CLASS});
+        if (nodeId === this.endNodeId) {
+            const distance = (this.distances.get(this.endNodeId): any);
+            console.log(`Finished: distance from ${this.startNodeId} to ${this.endNodeId} is ${distance}`);
+            graph = this.markShortestPath(graph);
+        } else if (this.isDone()) {
+            console.log(`Finished: can't reach ${this.endNodeId} from ${this.startNodeId}`);
         }
+
+        return graph;
     }
 
-    markAsVisited(nodeId: NodeId) {
+    markAsVisited(graph: Graph, nodeId: NodeId): Graph {
         this.visitedNodeIds.add(nodeId);
         this.lastVisitedNodeId = nodeId;
 
         if (nodeId !== this.startNodeId && nodeId !== this.endNodeId) {
-            this.graph.updateNode(nodeId, {class: Constants.VISITED_NODE_CLASS});
+            graph = Graph.updateNode(graph, nodeId, {class: Constants.VISITED_NODE_CLASS});
         }
+        return graph;
     }
 
-    checkDone(nodeId: NodeId) {
-        if (nodeId === this.endNodeId) {
-            const distance = (this.distances.get(this.endNodeId): any);
-            console.log(`Finished: distance from ${this.startNodeId} to ${this.endNodeId} is ${distance}`);
-            this.markShortestPath();
-        } else if (this.isDone()) {
-            console.log(`Finished: can't reach ${this.endNodeId} from ${this.startNodeId}`);
-        }
-    }
-
-    markShortestPath() {
+    markShortestPath(graph: Graph): Graph {
         let id = this.endNodeId;
         while (id && id !== this.startNodeId) {
             const previousId = this.previousNodeId.get(id);
             if (previousId) {
-                this.graph.updateEdge(id, previousId, {class: Constants.HIGHLIGHTED_EDGE_CLASS});
+                graph = Graph.updateEdge(graph, id, previousId, {class: Constants.HIGHLIGHTED_EDGE_CLASS});
             }
             id = previousId;
         }
+        return graph;
     }
 }

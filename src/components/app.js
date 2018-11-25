@@ -144,13 +144,11 @@ export default class App extends React.Component<{}, AppState> {
     doStep(callback: () => void) {
         if (this.state.algo == null) {
             const algo = this.state.algoBuilder.build(this.state.graph, ...this.state.algoBuilderParams);
-            algo.init();
-            this.setState({algo: algo}, callback);
+            const graph = algo.init(this.state.graph);
+            this.setState({algo, graph}, callback);
         } else {
-            this.state.algo.step();
-            // TODO : make the graph immutable and return a copy at each step
-            // this will also us to go back to previous steps
-            this.forceUpdate(callback);
+            const graph = this.state.algo.step(this.state.graph);
+            this.setState({graph}, callback);
         }
     }
 }

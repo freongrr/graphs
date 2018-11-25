@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/freongrr/graphs#readme",
   "dependencies": {
+    "immutability-helper": "2.8.1",
     "react": "16.6.3",
     "react-dom": "16.6.3"
   },

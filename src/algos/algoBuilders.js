@@ -17,7 +17,7 @@ const BUILDERS = ([{
         const nodes = graph.getNodes();
         const firstNodeId = nodes[0].id;
         const lastNodeId = nodes[nodes.length - 1].id;
-        return new Dijkstra(graph, firstNodeId, lastNodeId);
+        return new Dijkstra(firstNodeId, lastNodeId);
     }
 }]: AlgoBuilder[]);
 

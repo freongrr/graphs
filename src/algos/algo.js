@@ -1,10 +1,12 @@
 // @flow
 
+import Graph from "../utils/graph";
+
 export interface Algo {
 
     isDone(): boolean;
 
-    init(): void;
+    init(Graph): Graph;
 
-    step(): void;
+    step(Graph): Graph;
 }
