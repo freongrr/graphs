@@ -11,10 +11,10 @@ export default class Graph {
     nodes: Node[];
     edges: Edge[];
 
-    constructor(from?: { key: string, nodes: Node[], edges: Edge[] }) {
-        this.key = from ? from.key : "graph" + Math.round(Math.random() * 1000);
-        this.nodes = from ? from.nodes : [];
-        this.edges = from ? from.edges : [];
+    constructor(key?: string, nodes?: Node[], edges?: Edge[]) {
+        this.key = key ? key : "graph" + Math.round(Math.random() * 1000);
+        this.nodes = nodes ? nodes : [];
+        this.edges = edges ? edges : [];
     }
 
     getKey() {
@@ -87,7 +87,18 @@ export default class Graph {
         } else {
             const node = graph.nodes[index];
             const updatedNode = {...node, ...attributes};
-            return new Graph(update(graph, {nodes: {$splice: [[index, 1, updatedNode]]}}));
+            const newNodes = update(graph.nodes, {$splice: [[index, 1, updatedNode]]});
+            // Also update the node in the relevant edges
+            const newEdges = graph.edges.map(e => {
+                if (e.source.id === id) {
+                    return {...e, source: updatedNode};
+                } else if (e.target.id === id) {
+                    return {...e, target: updatedNode};
+                } else {
+                    return e;
+                }
+            });
+            return new Graph(graph.key, newNodes, newEdges);
         }
     }
 
@@ -99,7 +110,8 @@ export default class Graph {
         } else {
             const edge = graph.edges[index];
             const updatedEdge = {...edge, ...attributes};
-            return new Graph(update(graph, {edges: {$splice: [[index, 1, updatedEdge]]}}));
+            const newEdges = update(graph.edges, {$splice: [[index, 1, updatedEdge]]});
+            return new Graph(graph.key, graph.nodes, newEdges);
         }
     }
 }
