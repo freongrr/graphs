@@ -11,12 +11,20 @@
     margin-right: 0.5em;
   }
 
+  // Change the mouse pointer for all fields
+  input, select {
+    outline: none;
+
+    &:disabled, &[disabled] {
+      cursor: not-allowed;
+    }
+  }
+
   input[type="number"] {
     width: 3em;
 
     &:disabled, &[disabled] {
       background-color: #EEE;
-      cursor: not-allowed;
     }
   }
 
@@ -26,7 +34,6 @@
     border: 1px solid $fgColor;
     margin-right: 0.5em;
     min-width: 5em;
-    outline: none;
 
     &:focus, &:hover {
       background-color: lighten($bgColor, 15%);
@@ -40,7 +47,11 @@
       color: desaturate($fgColor, 75%);
       background-color: desaturate($bgColor, 75%);
       border-color: desaturate($fgColor, 75%);
-      cursor: not-allowed;
     }
+  }
+
+  .graphBuilderSelector {
+    padding: 0.5em;
+    line-height: 2em;
   }
 }

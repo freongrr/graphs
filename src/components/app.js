@@ -1,20 +1,39 @@
+//@flow
 import React from "react";
-import {createRandomGraph, createSimpleGraph} from "../utils/graphBuilder";
+import Graph from "../utils/graph";
+import type {GraphBuilder} from "../utils/graphBuilders";
+import graphBuilders from "../utils/graphBuilders";
 import GraphRenderer from "./graphRenderer";
+import Algo from "../algos/algo";
 import Dijkstra from "../algos/dijkstra";
+import GraphBuilderSelector from "./graphBuilderSelector";
 import "./app.scss";
 
 const STEP_DELAY = 1000;
 
-export default class App extends React.Component {
+const NO_OP = () => {
+    // Nothing to do
+};
 
-    constructor(props) {
+type AppState = {
+    graphBuilder: GraphBuilder,
+    graphBuilderParams: mixed[],
+    graph: Graph,
+    playing: boolean,
+    algo: ?Algo
+};
+
+export default class App extends React.Component<{}, AppState> {
+
+    timeout: any;
+
+    constructor(props: {}) {
         super(props);
 
         this.state = {
-            nodeCount: 10,
-            edgeCount: 10,
-            graph: createSimpleGraph(),
+            graphBuilder: graphBuilders[0],
+            graphBuilderParams: [],
+            graph: graphBuilders[0].build(),
             playing: false,
             algo: null
         };
@@ -25,38 +44,41 @@ export default class App extends React.Component {
         const isDone = this.state.algo && this.state.algo.isDone();
         return (
             <div className="App">
-                <div className="fieldGroup">
-                    <label htmlFor="nodeCount">Nodes: </label>
-                    <input id="nodeCount" type="number" disabled={isPlaying}
-                        value={this.state.nodeCount} onChange={this.setNodeCount}/>
-                </div>
-                <div className="fieldGroup">
-                    <label htmlFor="edgeCount">Edges: </label>
-                    <input id="edgeCount" type="number" disabled={isPlaying}
-                        value={this.state.edgeCount} onChange={this.setEdgeCount}/>
-                </div>
+                <GraphBuilderSelector
+                    disabled={isPlaying}
+                    graphBuilder={this.state.graphBuilder}
+                    graphBuilderParams={this.state.graphBuilderParams}
+                    onGraphBuilderChange={this.setGraphBuilder}
+                    onGraphBuilderParamsChange={this.setGraphBuilderParams}/>
 
-                <input type="button" value="Reset" disabled={isPlaying} onClick={this.reset}/>
-                {isPlaying && <input type="button" value="Stop" onClick={this.stop}/>}
-                {!isPlaying && <input type="button" value="Play" onClick={this.play} disabled={isDone}/>}
-                <input type="button" value="Step" onClick={this.step} disabled={isPlaying || isDone}/>
+                <div>
+                    Algo:
+                    <input type="button" value="Reset" disabled={isPlaying} onClick={this.reset}/>
+                    {isPlaying && <input type="button" value="Stop" onClick={this.stop}/>}
+                    {!isPlaying && <input type="button" value="Play" onClick={this.play} disabled={isDone}/>}
+                    <input type="button" value="Step" onClick={this.step} disabled={isPlaying || isDone}/>
+                </div>
 
                 <GraphRenderer graph={this.state.graph}/>
             </div>
         );
     }
 
-    setNodeCount = e => this.setState({nodeCount: parseInt(e.target.value)});
+    setGraphBuilder = (graphBuilder: GraphBuilder) => {
+        this.setState({
+            graphBuilder: graphBuilder,
+            graphBuilderParams: graphBuilder.parameters.map(p => p.default)
+        });
+    };
 
-    setEdgeCount = e => this.setState({edgeCount: parseInt(e.target.value)});
+    setGraphBuilderParams = (graphBuilderParams: mixed[]) => {
+        this.setState({graphBuilderParams: graphBuilderParams});
+    };
 
     reset = () => {
+        const graph = this.state.graphBuilder.build(...this.state.graphBuilderParams);
         this.setState({
-            graph: createRandomGraph(
-                this.state.nodeCount,
-                this.state.nodeCount,
-                this.state.edgeCount,
-                this.state.edgeCount),
+            graph: graph,
             playing: false,
             algo: null
         });
@@ -71,7 +93,7 @@ export default class App extends React.Component {
 
     autoStep = () => {
         this.doStep(() => {
-            if (this.state.algo.isDone()) {
+            if (this.state.algo && this.state.algo.isDone()) {
                 this.stop();
             } else {
                 this.timeout = setTimeout(() => this.autoStep(), STEP_DELAY);
@@ -87,12 +109,10 @@ export default class App extends React.Component {
     };
 
     step = () => {
-        this.doStep(() => {
-            // No-op
-        });
+        this.doStep(NO_OP);
     };
 
-    doStep(callback) {
+    doStep(callback: () => void) {
         if (this.state.algo == null) {
             const algo = this.createAlgo();
             algo.init();
